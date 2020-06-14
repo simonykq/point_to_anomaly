@@ -10,15 +10,17 @@ export default class SeedScene extends Group {
   constructor() {
     super();
 
+    this.G = 600;
+    this.mod = 17;
+    this.N = 1;
+
     this.graph=[];
-    this.mod = 10;
 
     // To be synced
     this.meshes=[];
     this.bodies=[];
 
-    this.G = 100;
-    this.N = 1;
+
     this.world = undefined;
     this.dt = 1 / 60;
     this.f = 10000;
@@ -29,6 +31,7 @@ export default class SeedScene extends Group {
     this.radius = 1.3;
     this.boxShape = new CANNON.Sphere(this.radius);
     this.progress = 0;
+    this.progressMax = -30;
 
     this.land = new Land();
     this.land.position.copy(this.start);
@@ -45,16 +48,19 @@ export default class SeedScene extends Group {
   updateGraph() {
     for(var i=0; i !== this.graph.length; i++){
       
-      // this.graph[i].material.opacity = (i / this.G);
-      // console.log(this.graph[i].material.opacity);
+      var done = this.progress < this.progressMax;
+
+      var percentDone = Math.min(this.progress / this.progressMax, 0.99);
+      var percentOfGroup = (this.G - i) / this.G;
+
+      // var opacity = percentOfGroup < percentDone ? 1 : 0;
+      var opacity = done ? 1 : 1 - (percentOfGroup / percentDone);
+      this.graph[i].material.opacity = opacity;
 
       var mod = i % this.mod;
 
-      var position = undefined;
-      if (mod == 0) {
-        position = this.graph[i].mesh.position;
-      }
-      else {
+      if (mod != 0 && !done) {
+        
         var pos = this.graph[i].mesh.position;
 
         var center = this.graph[i - mod].mesh.position;        
@@ -62,18 +68,22 @@ export default class SeedScene extends Group {
         var jitterPos = new CANNON.Vec3(jitter.x + center.x, jitter.y + center.y, jitter.z + center.z);
 
         //linear interpolation
-        var progress = i / this.G;
-        var px = ((1 - progress) * pos.x) + (progress * jitterPos.x);
-        var py = ((1 - progress) * pos.y) + (progress * jitterPos.y);
-        var pz = ((1 - progress) * pos.z) + (progress * jitterPos.z);
+        // var progress = i / this.G;
+        var progress = this.progress / (this.progressMax * percentOfGroup * (1-percentDone) * 10);
+        progress *= 0.005;
+        // console.log(1.0 - progress);
+        var px = ((1.0 - progress) * pos.x) + (progress * jitterPos.x);
+        var py = ((1.0 - progress) * pos.y) + (progress * jitterPos.y);
+        var pz = ((1.0 - progress) * pos.z) + (progress * jitterPos.z);
         var place = new CANNON.Vec3(px, py, pz);
 
         this.graph[i].mesh.position.copy(place);
       }
 
       // this.graph[i].mesh.position.copy(position);
-      var opacity = mod == 0 ? 1 : 0;
-      // this.graph[i].material.opacity = opacity;
+      // var opacity = mod == 0 ? 1 : 0;
+
+
 
       //put the clusters at mod(i)X == 0
       //group mod!=0 around mod0 point
@@ -100,6 +110,9 @@ export default class SeedScene extends Group {
     this.updatePhysics();
     this.updateGraph();
     this.land.position.x -= this.dt;
+    if (this.progress < this.progressMax) {
+      this.land.visible = false;
+    }
     // this.rotation.y = timeStamp / 10000;
   }
 
@@ -167,7 +180,7 @@ export default class SeedScene extends Group {
 
         var cubeMaterial = new THREE.MeshPhongMaterial( { color: color } );
         var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-        var scale = (this.G - i) * 0.5;
+        var scale = (this.G - i) * 0.2;
         var start = this.start;
         var x = -scale * 0.2 * Math.cos(scale);
         var y = -scale * 0.2 * Math.sin(scale);
