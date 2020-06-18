@@ -25,7 +25,7 @@ export default class SeedScene extends Group {
     this.dt = 1 / 60;
     this.f = 10000;
     this.entitySize = 0.2;
-    this.spawn = new CANNON.Vec3(-100,5,0)
+    this.spawn = new CANNON.Vec3(-100,5,0);
     this.start = new CANNON.Vec3(20,0,20);
     this.mass = 5;
     this.radius = 1.3;
@@ -34,11 +34,12 @@ export default class SeedScene extends Group {
     this.progressMax = -30;
 
     this.land = new Land();
-    this.land.position.copy(this.start);
+    
+    this.land.position.copy(new CANNON.Vec3(40,0,40));
     // const flower = new Flower();
     this.lights = new BasicLights();
 
-    this.add(this.land, this.lights);
+    this.add(this.lights);
 
     this.initGraph()
     this.initCannon()
