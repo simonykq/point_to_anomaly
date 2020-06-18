@@ -356,18 +356,17 @@ export default class SeedScene extends Group {
       var color = mod == 0 ? 0xff0000 : 0x888888;
 
       var cubeGeo = new THREE.SphereBufferGeometry(
-        DATA[i][0],
-        DATA[i][1],
-        DATA[i][2]
+        this.entitySize
       );
 
       var cubeMaterial = new THREE.MeshPhongMaterial({ color: color });
       var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-      var scale = (DATA.length - i) * 0.2;
+      var scale = 10;
       var start = this.start;
-      var x = DATA[i][0] * scale;
-      var y = DATA[i][1] * scale;
-      var z = DATA[i][2] * scale;
+
+      var x = DATA[i]['0.391'] * scale;
+      var y = DATA[i]['0.916'] * scale;
+      var z = DATA[i]['-0.087'] * scale;
 
       var helix = new CANNON.Vec3(z, y, x);
       var pos = new CANNON.Vec3(helix.x, helix.y, helix.z);
