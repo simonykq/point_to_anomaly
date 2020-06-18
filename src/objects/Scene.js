@@ -173,8 +173,7 @@ export default class SeedScene extends Group {
         var sos = this.sosPos[i];
         data[i].mesh.position.copy(sos);
       }
-
-      if (this.stage === 'analysis') {
+      else if (this.stage === 'analysis') {
         var pos = this.clusterPos[i];
         var sos = this.sosPos[i]; 
 
