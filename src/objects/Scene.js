@@ -96,9 +96,9 @@ export default class SeedScene extends Group {
       this.stage = "backflip";
     } else {
       if (this.progress < this.progressMax / 2) {
-        this.stage = "importing";
-      } else {
         this.stage = "processing";
+      } else {
+        this.stage = "importing";
       }
     }
   }
@@ -171,7 +171,7 @@ export default class SeedScene extends Group {
 
   updatePhysics() {
     this.world.step(this.dt);
-    this.progress += -this.dt;
+
     for (var i = 0; i !== this.meshes.length; i++) {
       this.meshes[i].position.copy(this.bodies[i].position);
       this.meshes[i].quaternion.copy(this.bodies[i].quaternion);
