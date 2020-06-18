@@ -48,12 +48,13 @@ export default class SeedScene extends Group {
   constructor() {
     super();
 
-    this.G = 300;
+    this.G = DATA.length;
     this.mod = 17;
     this.N = 100;
 
     this.graph = [];
     this.sos = [];
+    this.sosPos = [];
 
     // To be synced
 
@@ -118,10 +119,10 @@ export default class SeedScene extends Group {
 
     this.add(this.lights);
 
-    // this.initGraph();
+    this.initGraph();
     this.initSos();
     this.initCannon();
-    // this.init();
+    this.init();
     this.initText(this);
   }
 
@@ -134,9 +135,9 @@ export default class SeedScene extends Group {
       this.stage = "backflip";
     } else {
       if (this.progress < this.progressMax / 2) {
-        this.stage = "importing";
-      } else {
         this.stage = "processing";
+      } else {
+        this.stage = "importing";
       }
     }
   }
@@ -161,41 +162,64 @@ export default class SeedScene extends Group {
 
   updateGraph(data) {
     for (var i = 0; i !== data.length; i++) {
-      var done = this.progress < this.progressMax;
 
-      var percentDone = Math.min(this.progress / this.progressMax, 0.99);
-      var percentOfGroup = (this.G - i) / this.G;
 
-      // var opacity = percentOfGroup < percentDone ? 1 : 0;
-      var opacity = done ? 1 : 1 - percentOfGroup / percentDone;
-      data[i].material.opacity = opacity;
-
-      var mod = i % this.mod;
-
-      if (mod != 0 && !done) {
+      if (this.stage === 'analysis') {
         var pos = data[i].mesh.position;
+        var sos = this.sosPos[i]; 
 
-        var center = data[i - mod].mesh.position;
-        var jitter = data[i].jitter;
-        var jitterPos = new CANNON.Vec3(
-          jitter.x + center.x,
-          jitter.y + center.y,
-          jitter.z + center.z
-        );
+        var percentDone = Math.min(this.progress / this.progressMax, 0.99);
 
-        //linear interpolation
-        // var progress = i / this.G;
-        var progress =
-          this.progress /
-          (this.progressMax * percentOfGroup * (1 - percentDone) * 10);
-        progress *= 0.005;
-        // console.log(1.0 - progress);
-        var px = (1.0 - progress) * pos.x + progress * jitterPos.x;
-        var py = (1.0 - progress) * pos.y + progress * jitterPos.y;
-        var pz = (1.0 - progress) * pos.z + progress * jitterPos.z;
+        // console.log("percentDone " + percentDone);
+
+        var progress = 1 - percentDone;
+        // progress *= 0.005;
+        // // console.log(1.0 - progress);
+        var px = (1.0 - progress) * pos.x + progress * sos.x;
+        var py = (1.0 - progress) * pos.y + progress * sos.y;
+        var pz = (1.0 - progress) * pos.z + progress * sos.z;
         var place = new CANNON.Vec3(px, py, pz);
 
         data[i].mesh.position.copy(place);
+      }
+      else {
+
+        var done = this.progress < this.progressMax;
+
+        var percentDone = Math.min(this.progress / this.progressMax, 0.99);
+        var percentOfGroup = (this.G - i) / this.G;
+
+        // var opacity = percentOfGroup < percentDone ? 1 : 0;
+        var opacity = done ? 1 : 1 - percentOfGroup / percentDone;
+        data[i].material.opacity = opacity;
+
+        var mod = i % this.mod;
+
+        if (mod != 0 && !done) {
+          var pos = data[i].mesh.position;
+
+          var center = data[i - mod].mesh.position;
+          var jitter = data[i].jitter;
+          var jitterPos = new CANNON.Vec3(
+            jitter.x + center.x,
+            jitter.y + center.y,
+            jitter.z + center.z
+          );
+
+          //linear interpolation
+          // var progress = i / this.G;
+          var progress =
+            this.progress /
+            (this.progressMax * percentOfGroup * (1 - percentDone) * 10);
+          progress *= 0.005;
+          // console.log(1.0 - progress);
+          var px = (1.0 - progress) * pos.x + progress * jitterPos.x;
+          var py = (1.0 - progress) * pos.y + progress * jitterPos.y;
+          var pz = (1.0 - progress) * pos.z + progress * jitterPos.z;
+          var place = new CANNON.Vec3(px, py, pz);
+
+          data[i].mesh.position.copy(place);
+        }
       }
 
       // data[i].mesh.position.copy(position);
@@ -209,7 +233,7 @@ export default class SeedScene extends Group {
 
   updatePhysics() {
     this.world.step(this.dt);
-    this.progress += -this.dt;
+
     for (var i = 0; i !== this.meshes.length; i++) {
       this.meshes[i].position.copy(this.bodies[i].position);
       this.meshes[i].quaternion.copy(this.bodies[i].quaternion);
@@ -348,7 +372,7 @@ export default class SeedScene extends Group {
 
       var cubeMaterial = new THREE.MeshPhongMaterial({ color: color });
       var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-      var scale = (this.G - i) * 0.2;
+      var scale = (this.G - i) * 0.03 + 2;
       var start = this.start;
       var x = -scale * 0.2 * Math.cos(scale);
       var y = -scale * 0.2 * Math.sin(scale);
@@ -390,23 +414,23 @@ export default class SeedScene extends Group {
 
   initSos() {
     for (var i = 0; i < DATA.length; i++) {
+      var scale = 10;
+      var x = DATA[i]['0.391'] * scale;
+      var y = DATA[i]['0.916'] * scale;
+      var z = DATA[i]['-0.087'] * scale;
+      var spos = new CANNON.Vec3(x,y,z);
+      this.sosPos.push(spos);
+
+
       var color = OUTLIER_INDICES.includes(i) ? 0xff0000 : 0x00ff00;
 
-      var scale = 10;
-
-      var x = DATA[i]["0.391"] * scale;
-      var y = DATA[i]["0.916"] * scale;
-      var z = DATA[i]["-0.087"] * scale;
       var cubeGeo = new THREE.SphereBufferGeometry(this.entitySize);
 
       var cubeMaterial = new THREE.MeshPhongMaterial({ color: color });
       var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-
-      var helix = new CANNON.Vec3(z, y, x);
-      var pos = new CANNON.Vec3(helix.x, helix.y, helix.z);
-      cubeMesh.position.copy(pos);
+      
+      cubeMesh.position.copy(spos);
       cubeMesh.castShadow = true;
-      // cubeMaterial.transparent = true;
 
       var flip = i % 2 == 0 ? 1 : -1;
       var jitterSpace = 1;
@@ -431,9 +455,10 @@ export default class SeedScene extends Group {
   }
 
   init() {
-    var cubeGeo = new THREE.SphereGeometry(this.entitySize);
+    var cubeGeo = new THREE.SphereBufferGeometry(this.entitySize);
     // var cubeGeo = new THREE.BoxGeometry( 1, 1, 1, 10, 10 );
     var cubeMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+    cubeMaterial.transparent = true;
     for (var i = 0; i < this.N; i++) {
       var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
       cubeMesh.castShadow = true;
