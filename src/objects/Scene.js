@@ -48,6 +48,12 @@ export default class SeedScene extends Group {
   constructor() {
     super();
 
+    this.blues = [0xcce6ff, 0xb3d9ff, 0x99ccff, 0x80bfff, 0x66b3ff, 0x4da6ff, 0x3399ff, 0x1a8cff, 0x0080ff];
+    this.reds = [0xff4d4d, 0xff3333, 0xe60000, 0xff5c33, 0xb32400, 0xff1a1a];
+    this.yellows = [0xffcc00, 0xe68a00, 0xffb84d, 0xffc266];
+    this.greens = [0x339933, 0x267326, 0x2d862d, 0x53c653, 0x39ac39];
+
+
     this.G = DATA.length;
     this.mod = 17;
     this.N = 100;
@@ -168,7 +174,6 @@ export default class SeedScene extends Group {
 
     for (var i = 0; i !== data.length; i++) {
 
-
       if (this.stage === 'results') {
         var sos = this.sosPos[i];
         data[i].mesh.position.copy(sos);
@@ -186,6 +191,19 @@ export default class SeedScene extends Group {
         var place = new CANNON.Vec3(px, py, pz);
 
         data[i].mesh.position.copy(place);
+
+        var loopD = i / data.length;
+        if (loopD > percentDone) {
+          if (OUTLIER_INDICES.includes(i)) {
+            data[i].material.color.setHex(this.reds[i % this.reds.length]);
+          }
+          else if (i % this.mod == 0) {
+            data[i].material.color.setHex(this.yellows[i % this.yellows.length]);          
+          }
+          else {
+            data[i].material.color.setHex(this.greens[i % this.greens.length]); 
+          }
+        }
       }
       else {
 
@@ -233,7 +251,7 @@ export default class SeedScene extends Group {
       this.meshes[i].position.copy(this.bodies[i].position);
       this.meshes[i].quaternion.copy(this.bodies[i].quaternion);
 
-      if (this.bodies[i].position.x > this.progress) {
+      if (this.bodies[i].position.x > (this.progress *2.5)) {
         this.world.remove(this.bodies[i]);
         this.bodies[i] = this.ball();
         this.world.addBody(this.bodies[i]);
@@ -300,7 +318,7 @@ export default class SeedScene extends Group {
       mass: this.mass,
     });
     boxBody.addShape(this.boxShape);
-    var jitterSpace = 2;
+    var jitterSpace = 1;
     var jitter = new CANNON.Vec3(
       Math.random() * jitterSpace,
       Math.random() * jitterSpace,
@@ -344,12 +362,10 @@ export default class SeedScene extends Group {
 
   initGraph() {
     var cubeGeo = new THREE.SphereBufferGeometry(this.entitySize);
-    // var cubeGeo = new THREE.BoxGeometry( 1, 1, 1, 10, 10 );
-    var cubeMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
 
     for (var i = 0; i < this.G; i++) {
-      var mod = i % this.mod;
-      var color = mod == 0 ? 0xff0000 : 0x888888;
+      var mod = i % this.blues.length;
+      var color = this.blues[mod];//mod == 0 ? 0xff0000 : 0x888888;
 
       var cubeMaterial = new THREE.MeshPhongMaterial({ color: color });
       var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
@@ -410,7 +426,10 @@ export default class SeedScene extends Group {
 
   initSos() {
     for (var i = 0; i < DATA.length; i++) {
-      var scale = 10;
+      var jitter = Math.random();
+
+      var scale = OUTLIER_INDICES.includes(i) ? 11 + jitter : 10 - jitter;
+
       var x = DATA[i]['0.391'] * scale;
       var y = DATA[i]['0.916'] * scale;
       var z = DATA[i]['-0.087'] * scale;
