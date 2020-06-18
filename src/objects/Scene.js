@@ -10,7 +10,7 @@ export default class SeedScene extends Group {
   constructor() {
     super();
 
-    this.G = 300;
+    this.G = DATA.length;
     this.mod = 17;
     this.N = 100;
 
@@ -398,9 +398,10 @@ export default class SeedScene extends Group {
   }
 
   init() {
-    var cubeGeo = new THREE.SphereGeometry(this.entitySize);
+    var cubeGeo = new THREE.SphereBufferGeometry(this.entitySize);
     // var cubeGeo = new THREE.BoxGeometry( 1, 1, 1, 10, 10 );
     var cubeMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
+    cubeMaterial.transparent = true;
     for (var i = 0; i < this.N; i++) {
       var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
       cubeMesh.castShadow = true;
