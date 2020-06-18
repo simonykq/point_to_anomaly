@@ -14,10 +14,9 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 // import { LegacyJSONLoader } from 'three/examples/jsm/loaders/deprecated/LegacyJSONLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as CANNON from 'cannon';
-import DOG from './dog/scene.gltf';
-import tex1 from './dog/textures/Material_32_diffuse.jpeg';
-import tex2 from './dog/textures/Material_32_specularGlossiness.png';
-import sbin from './dog/scene.bin';
+import CORGI from "./corgi/dog_corgi_animated/scene.gltf"; 
+import tex1 from "./corgi/dog_corgi_animated/textures/dog_diffuse_diffuse.png";
+import sbin from "./corgi/dog_corgi_animated/scene.bin";
 import bg from './bg.png';
 
 const scene = new Scene();
@@ -27,12 +26,13 @@ const seedScene = new SeedScene();
 
 var controls = new OrbitControls( camera, renderer.domElement );
 
-console.log(DOG.images);
+console.log(CORGI.images);
 var loader = new GLTFLoader();
-loader.load(DOG, (gltf) => {
-  console.log(gltf.scene.scale);
-  gltf.scene.scale.copy({x : 0.2, y: 0.2, z: 0.2});
-  gltf.scene.position.copy(new CANNON.Vec3(20,-15,20));
+loader.load(CORGI, (gltf) => {
+  // console.log(gltf.scene.scale);
+  gltf.scene.scale.copy({x : 10, y: 10, z: 10});
+  gltf.scene.rotateY(-90);
+  gltf.scene.position.copy(new CANNON.Vec3(20, -15, 20));
   seedScene.add(gltf.scene);
   seedScene.land = gltf.scene;
 })

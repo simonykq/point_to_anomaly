@@ -7623,7 +7623,7 @@
   "buffers": [
     {
       "byteLength": 341528,
-      "uri": "scene.bin"
+      "uri": "16d83b067ce637d2c29a2c38d7453866.bin"
     }
   ],
   "extensionsRequired": [
@@ -7634,7 +7634,7 @@
   ],
   "images": [
     {
-      "uri": "textures/dog_diffuse_diffuse.png"
+      "uri": "2e450a093251a90f298723275957b078.png"
     }
   ],
   "materials": [
