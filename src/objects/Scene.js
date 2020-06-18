@@ -54,6 +54,9 @@ export default class SeedScene extends Group {
 
     this.graph = [];
     this.sos = [];
+
+    this.clusterPos = [];
+    this.helixPos = [];
     this.sosPos = [];
 
     // To be synced
@@ -161,16 +164,19 @@ export default class SeedScene extends Group {
   }
 
   updateGraph(data) {
+    var percentDone = Math.min(this.progress / this.progressMax, 0.99);
+
     for (var i = 0; i !== data.length; i++) {
 
 
+      if (this.stage === 'results') {
+        var sos = this.sosPos[i];
+        data[i].mesh.position.copy(sos);
+      }
+
       if (this.stage === 'analysis') {
-        var pos = data[i].mesh.position;
+        var pos = this.clusterPos[i];
         var sos = this.sosPos[i]; 
-
-        var percentDone = Math.min(this.progress / this.progressMax, 0.99);
-
-        // console.log("percentDone " + percentDone);
 
         var progress = 1 - percentDone;
         // progress *= 0.005;
@@ -186,7 +192,6 @@ export default class SeedScene extends Group {
 
         var done = this.progress < this.progressMax;
 
-        var percentDone = Math.min(this.progress / this.progressMax, 0.99);
         var percentOfGroup = (this.G - i) / this.G;
 
         // var opacity = percentOfGroup < percentDone ? 1 : 0;
@@ -196,26 +201,17 @@ export default class SeedScene extends Group {
         var mod = i % this.mod;
 
         if (mod != 0 && !done) {
-          var pos = data[i].mesh.position;
-
-          var center = data[i - mod].mesh.position;
-          var jitter = data[i].jitter;
-          var jitterPos = new CANNON.Vec3(
-            jitter.x + center.x,
-            jitter.y + center.y,
-            jitter.z + center.z
-          );
-
+          var helix = this.helixPos[i];
+          var cluster = this.clusterPos[i];
+          
           //linear interpolation
           // var progress = i / this.G;
-          var progress =
-            this.progress /
-            (this.progressMax * percentOfGroup * (1 - percentDone) * 10);
-          progress *= 0.005;
+          var progress = percentDone;//this.progress / (this.progressMax * percentOfGroup * (1 - percentDone) * 10);
+          // progress *= 0.005;
           // console.log(1.0 - progress);
-          var px = (1.0 - progress) * pos.x + progress * jitterPos.x;
-          var py = (1.0 - progress) * pos.y + progress * jitterPos.y;
-          var pz = (1.0 - progress) * pos.z + progress * jitterPos.z;
+          var px = ((1.0 - progress) * helix.x) + (progress * cluster.x);
+          var py = ((1.0 - progress) * helix.y) + (progress * cluster.y);
+          var pz = ((1.0 - progress) * helix.z) + (progress * cluster.z);
           var place = new CANNON.Vec3(px, py, pz);
 
           data[i].mesh.position.copy(place);
@@ -345,20 +341,6 @@ export default class SeedScene extends Group {
       this.bodies.push(body);
     }
 
-    // Create a plane
-    // var groundShape = new CANNON.Plane();
-    // var groundBody = new CANNON.Body({ mass: 0 });
-    // groundBody.addShape(groundShape);
-    // groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-    // this.world.addBody(groundBody);
-
-    // Joint body
-    // var shape = new CANNON.Sphere(this.entitySize);
-    // var jointBody = new CANNON.Body({ mass: 0 });
-    // jointBody.addShape(shape);
-    // jointBody.collisionFilterGroup = 0;
-    // jointBody.collisionFilterMask = 0;
-    // this.world.addBody(jointBody)
   }
 
   initGraph() {
@@ -403,6 +385,21 @@ export default class SeedScene extends Group {
         flip * jitter.z
       );
 
+      this.helixPos.push(pos);
+      if (mod != 0) {
+        var center = this.graph[i - mod].mesh.position;
+        var jitterPos = new CANNON.Vec3(
+          jitter.x + center.x,
+          jitter.y + center.y,
+          jitter.z + center.z
+        );
+        this.clusterPos.push(jitterPos);
+      }
+      else {
+        this.clusterPos.push(pos);
+      }
+      
+
       this.graph.push({
         mesh: cubeMesh,
         material: cubeMaterial,
@@ -422,35 +419,7 @@ export default class SeedScene extends Group {
       this.sosPos.push(spos);
 
 
-      var color = OUTLIER_INDICES.includes(i) ? 0xff0000 : 0x00ff00;
-
-      var cubeGeo = new THREE.SphereBufferGeometry(this.entitySize);
-
-      var cubeMaterial = new THREE.MeshPhongMaterial({ color: color });
-      var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-      
-      cubeMesh.position.copy(spos);
-      cubeMesh.castShadow = true;
-
-      var flip = i % 2 == 0 ? 1 : -1;
-      var jitterSpace = 1;
-      var jitter = new CANNON.Vec3(
-        Math.random() * jitterSpace,
-        Math.random() * jitterSpace,
-        Math.random() * jitterSpace
-      );
-      var jitterPos = new CANNON.Vec3(
-        flip * jitter.x,
-        flip * jitter.y,
-        flip * jitter.z
-      );
-
-      this.sos.push({
-        mesh: cubeMesh,
-        material: cubeMaterial,
-        jitter: jitterPos,
-      });
-      this.add(cubeMesh);
+      var color = OUTLIER_INDICES.includes(i) ? 0xff0000 : 0x00ff00;      
     }
   }
 
