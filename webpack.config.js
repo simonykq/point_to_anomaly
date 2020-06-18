@@ -40,7 +40,7 @@ module.exports = {
       },
       {
         type: "javascript/auto",
-        test: /data/,
+        test: /data|data_normalized/,
         exclude: path.resolve(__dirname, "./node_modules/"),
         use: [
           {
