@@ -10,13 +10,14 @@ export default class SeedScene extends Group {
   constructor() {
     super();
 
-    this.G = 600;
+    this.G = 300;
     this.mod = 17;
-    this.N = 1;
+    this.N = 100;
 
     this.graph=[];
 
     // To be synced
+
     this.meshes=[];
     this.bodies=[];
 
@@ -32,6 +33,10 @@ export default class SeedScene extends Group {
     this.boxShape = new CANNON.Sphere(this.radius);
     this.progress = 0;
     this.progressMax = -30;
+    this.spinMove = 0;
+    this.inputStop = false;
+    this.spun = false;
+    this.done = false;
 
     this.land = new Land();
     
@@ -55,7 +60,7 @@ export default class SeedScene extends Group {
       var percentOfGroup = (this.G - i) / this.G;
 
       // var opacity = percentOfGroup < percentDone ? 1 : 0;
-      var opacity = done ? 1 : 1 - (percentOfGroup / percentDone);
+      var opacity = done || this.spun ? 1 : 1 - (percentOfGroup / percentDone);
       this.graph[i].material.opacity = opacity;
 
       var mod = i % this.mod;
@@ -94,25 +99,70 @@ export default class SeedScene extends Group {
 
   updatePhysics(){
     this.world.step(this.dt);
-    this.progress += -this.dt;
+    
     for(var i=0; i !== this.meshes.length; i++){
-      this.meshes[i].position.copy(this.bodies[i].position);
-      this.meshes[i].quaternion.copy(this.bodies[i].quaternion);
+      this.meshes[i].mesh.position.copy(this.bodies[i].position);
+      this.meshes[i].mesh.quaternion.copy(this.bodies[i].quaternion);
       
-      if (this.bodies[i].position.x > this.progress) {
+      if (this.bodies[i].position.x > this.progress - 3) {
         this.world.remove(this.bodies[i]);
         this.bodies[i] = this.ball();
         this.world.addBody(this.bodies[i]);
+      }
+
+      if (this.inputStop) {
+        this.meshes[i].material.opacity = 0;
       }
     }
   }
 
   update(timeStamp) {
+    if (this.done) {
+      return;
+    }
+    if (this.spun) {
+      this.progress += this.dt;
+      if (this.progress > 0) {
+        this.done = true;
+      }
+    }
+    else {
+      this.progress -= this.dt;
+    }
+
     this.updatePhysics();
     this.updateGraph();
-    this.land.position.x -= this.dt;
+    
+    if (this.spun) {
+      this.land.position.x += this.dt;
+      if (this.done) {
+        var rotation = this.land.quaternion.clone();
+        rotation.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), 0 );
+        this.land.quaternion.copy(rotation);
+      }
+    }
+    else {
+      this.land.position.x -= this.dt;
+      
+    }
     if (this.progress < this.progressMax) {
-      this.land.visible = false;
+      // this.land.visible = false;
+      var rotation = this.land.quaternion.clone();      
+      
+      if (this.spinMove <= 0) {
+        this.inputStop = true;
+        this.spinMove -= this.dt;
+        rotation.setFromAxisAngle( new THREE.Vector3( 0, 1, 1 ), this.spinMove );
+        // this.land.position.y += this.dt;
+      }
+      
+      if (this.spinMove < -6.28) {
+        this.spinMove = 0.01;
+        this.spun = true;
+        rotation.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI );
+      }
+      this.land.quaternion.copy(rotation);
+
     }
     // this.rotation.y = timeStamp / 10000;
   }
@@ -216,10 +266,15 @@ export default class SeedScene extends Group {
     var cubeGeo = new THREE.SphereGeometry( this.entitySize);
     // var cubeGeo = new THREE.BoxGeometry( 1, 1, 1, 10, 10 );
     var cubeMaterial = new THREE.MeshPhongMaterial( { color: 0x888888 } );
+    
     for(var i=0; i<this.N; i++){
         var cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
         cubeMesh.castShadow = true;
-        this.meshes.push(cubeMesh);
+        cubeMaterial.transparent = true;
+        this.meshes.push({
+          mesh : cubeMesh,
+          material : cubeMaterial
+        });
         this.add(cubeMesh);
     }
   }

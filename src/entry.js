@@ -31,7 +31,7 @@ var loader = new GLTFLoader();
 loader.load(DOG, (gltf) => {
   console.log(gltf.scene.scale);
   gltf.scene.scale.copy({x : 0.2, y: 0.2, z: 0.2});
-  gltf.scene.position.copy(new CANNON.Vec3(20,0,20));
+  gltf.scene.position.copy(new CANNON.Vec3(20,-15,20));
   seedScene.add(gltf.scene);
   seedScene.land = gltf.scene;
 })
