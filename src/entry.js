@@ -18,6 +18,7 @@ import DOG from './dog/scene.gltf';
 import tex1 from './dog/textures/Material_32_diffuse.jpeg';
 import tex2 from './dog/textures/Material_32_specularGlossiness.png';
 import sbin from './dog/scene.bin';
+import bg from './bg.png';
 
 const scene = new Scene();
 const camera = new PerspectiveCamera();
@@ -39,6 +40,13 @@ loader.load(DOG, (gltf) => {
 
 // scene
 scene.add(seedScene);
+
+
+const texloader = new THREE.TextureLoader();
+const bgTexture = texloader.load(bg);
+bgTexture.repeat.x = 2;
+bgTexture.repeat.y = 2;
+scene.background = bgTexture;
 
 // camera
 camera.position.set(15,3,-20);

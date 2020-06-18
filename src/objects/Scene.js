@@ -4,6 +4,7 @@ import Flower from './Flower/Flower.js';
 import BasicLights from './Lights.js';
 import * as CANNON from 'cannon';
 import * as THREE from 'three';
+import * as FONT from './helvetiker_regular.typeface.json';
 
 export default class SeedScene extends Group {
   
@@ -21,6 +22,39 @@ export default class SeedScene extends Group {
     this.meshes=[];
     this.bodies=[];
 
+    this.state = "importing";
+    this.fontMessages = {
+      "importing" : {
+        text : "Importing ...",
+        mesh : undefined,
+        material : undefined,
+        hidePos : undefined
+      },
+      "processing" : {
+        text : "Processing ...",
+        mesh : undefined,
+        material : undefined,
+        hidePos : undefined
+      },
+      "backflip" : {
+        text : "Backflip!",
+        mesh : undefined,
+        material : undefined,
+        hidePos : undefined
+      },
+      "analysis" : {
+        text : "Analysis ...",
+        mesh : undefined,
+        material : undefined,
+        hidePos : undefined
+      },
+      "results" : {
+        text : "View Results",
+        mesh : undefined,
+        material : undefined,
+        hidePos : undefined
+      },
+    };
 
     this.world = undefined;
     this.dt = 1 / 60;
@@ -37,6 +71,7 @@ export default class SeedScene extends Group {
     this.inputStop = false;
     this.spun = false;
     this.done = false;
+  
 
     this.land = new Land();
     
@@ -46,9 +81,45 @@ export default class SeedScene extends Group {
 
     this.add(this.lights);
 
-    this.initGraph()
-    this.initCannon()
-    this.init()
+    this.initGraph();
+    this.initCannon();
+    this.init();
+    this.initText(this);
+  }
+
+  updateStage() {
+    if (this.done) {
+      this.stage = "results";
+    }
+    else if (this.spun) {
+      this.stage = "analysis";
+    }
+    else if (this.spinMove < 0) {
+      this.stage = "backflip";
+    }
+    else {
+      if (this.progress < this.progressMax / 2) {
+        this.stage = "importing";
+      }
+      else {
+        this.stage = "processing";
+      }
+    }  
+  }
+
+  updateText() {
+    for (var stage in this.fontMessages) {
+      if (this.fontMessages[stage].material) {
+        if (stage === this.stage) {
+          this.fontMessages[stage].material.opacity = 1;
+          this.fontMessages[stage].mesh.position.copy(this.fontMessages[stage].showPos);
+        }
+        else {
+          this.fontMessages[stage].material.opacity = 0;
+          this.fontMessages[stage].mesh.position.copy(this.fontMessages[stage].hidePos);
+        }
+      }     
+    }
   }
 
   updateGraph() {
@@ -130,8 +201,11 @@ export default class SeedScene extends Group {
       this.progress -= this.dt;
     }
 
+    this.updateStage();
+    this.updateText();
     this.updatePhysics();
     this.updateGraph();
+    
     
     if (this.spun) {
       this.land.position.x += this.dt;
@@ -277,6 +351,52 @@ export default class SeedScene extends Group {
         });
         this.add(cubeMesh);
     }
+  }
+
+  initText(self) {
+    
+
+    
+    var loader = new THREE.FontLoader();
+
+    loader.load( FONT, function ( font ) {
+
+      var i = 2;
+      for (var stage in self.fontMessages) {
+        var message = self.fontMessages[stage].text;
+
+        i++;
+
+        var fontMaterial = new THREE.MeshPhongMaterial( { color: 0x888888 } );
+        fontMaterial.transparent = true;
+
+        var fontGeometry = new THREE.TextGeometry( message, {
+          font: font,
+          size: 80,
+          height: 5,
+          curveSegments: 12,
+          bevelEnabled: true,
+          bevelThickness: 10,
+          bevelSize: 8,
+          bevelOffset: 0,
+          bevelSegments: 5
+        } );
+
+
+        var fontMesh = new THREE.Mesh(fontGeometry, fontMaterial);
+        self.fontMessages[stage].mesh = fontMesh;
+        self.fontMessages[stage].material = fontMaterial;
+        self.fontMessages[stage].hidePos = new THREE.Vector3( -10, -10 * i, -10 );
+        self.fontMessages[stage].showPos = new THREE.Vector3( -10, -10, -10 );
+
+        fontMesh.position.copy(new THREE.Vector3( -10, -10 * i, -10 ));
+        fontMesh.quaternion.setFromAxisAngle( new THREE.Vector3( 0.01, 1, 0 ), Math.PI - 0.65);
+        fontMesh.scale.copy({x: 0.01, y: 0.01, z:0.01});
+
+        self.add(fontMesh);
+      }
+
+    } );
   }
 
 }
