@@ -33,7 +33,7 @@ var clock = new THREE.Clock();
 var loader = new GLTFLoader();
 loader.load(CORGI, (gltf) => {
   // console.log(gltf.scene.scale);
-  gltf.scene.scale.copy({x : 10, y: 10, z: 10});
+  gltf.scene.scale.copy({x : 5, y: 5, z: 5});
   gltf.scene.rotateY(-90);
   gltf.scene.position.copy(new CANNON.Vec3(20, -15, 20));
   seedScene.add(gltf.scene);
@@ -41,7 +41,7 @@ loader.load(CORGI, (gltf) => {
 
   mixer = new THREE.AnimationMixer(gltf.scene);
 
-  var clip = THREE.AnimationClip.findByName(gltf.animations, "Run");
+  var clip = THREE.AnimationClip.findByName(gltf.animations, "Jump");
   var action = mixer.clipAction(clip);
   action.play();
 })
