@@ -97,7 +97,7 @@ export default class SeedScene extends Group {
         hidePos: undefined,
       },
       results: {
-        text: "View Results",
+        text: "View Results -->",
         mesh: undefined,
         material: undefined,
         hidePos: undefined,
@@ -119,6 +119,7 @@ export default class SeedScene extends Group {
     this.inputStop = false;
     this.spun = false;
     this.done = false;
+    this.stage = "importing"
 
     this.land = new Land();
 
@@ -133,6 +134,10 @@ export default class SeedScene extends Group {
     this.initCannon();
     this.init();
     this.initText(this);
+  }
+
+  getStage() {
+    return this.stage;
   }
 
   updateStage() {
@@ -257,8 +262,11 @@ export default class SeedScene extends Group {
         this.world.addBody(this.bodies[i]);
       }
 
-      if (this.inputStop) {
+      if (this.inputStop || this.progress > -0.1) {
         this.meshes[i].material.opacity = 0;
+      }
+      else {
+        this.meshes[i].material.opacity = 1;
       }
     }
   }
@@ -286,7 +294,7 @@ export default class SeedScene extends Group {
       this.land.position.x += this.dt;
       if (this.done) {
         var rotation = this.land.quaternion.clone();
-        rotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0);
+        rotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
         this.land.quaternion.copy(rotation);
       }
     } else {
@@ -306,7 +314,7 @@ export default class SeedScene extends Group {
       if (this.spinMove < -6.28) {
         this.spinMove = 0.01;
         this.spun = true;
-        rotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+        rotation.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
       }
       this.land.quaternion.copy(rotation);
     }

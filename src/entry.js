@@ -30,6 +30,11 @@ var controls = new OrbitControls( camera, renderer.domElement );
 var mixer;
 var clock = new THREE.Clock();
 
+var playing = undefined;
+var jump = undefined;
+var sit = undefined;
+var run = undefined;
+
 var loader = new GLTFLoader();
 loader.load(CORGI, (gltf) => {
   // console.log(gltf.scene.scale);
@@ -41,9 +46,12 @@ loader.load(CORGI, (gltf) => {
 
   mixer = new THREE.AnimationMixer(gltf.scene);
 
-  var clip = THREE.AnimationClip.findByName(gltf.animations, "Jump");
-  var action = mixer.clipAction(clip);
-  action.play();
+  jump = mixer.clipAction(THREE.AnimationClip.findByName(gltf.animations, "Jump"));
+  sit = mixer.clipAction(THREE.AnimationClip.findByName(gltf.animations, "Sitting"));
+  run = mixer.clipAction(THREE.AnimationClip.findByName(gltf.animations, "Run"));
+
+  playing = "importing";
+  jump.play();
 })
 
 
@@ -68,9 +76,35 @@ renderer.setClearColor(0x7ec0ee, 1);
 // render loop
 const onAnimationFrameHandler = (timeStamp) => {
   renderer.render(scene, camera);
+  var stage = seedScene.getStage();
+  
+
   seedScene.update && seedScene.update(timeStamp);
 
   if (mixer) {
+
+    if (stage === 'processing' && playing !== 'processing') {
+      playing = 'processing'
+      jump.stop();
+      run.play();
+    }
+    if (stage === 'backflip' && playing !== 'backflip') {
+      playing = 'backflip'
+      run.stop();
+      sit.play();
+    }
+    if (stage === 'analysis' && playing !== 'analysis') {
+      playing = 'analysis'
+      sit.stop()
+      jump.play();
+    }
+    if (stage === 'results' && playing !== 'results') {
+      playing = 'results'
+      jump.stop();
+      sit.play();
+      run.stop();
+    }
+
     var delta = clock.getDelta();
     mixer.update(delta);
   }
