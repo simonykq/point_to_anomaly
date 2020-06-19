@@ -14,9 +14,10 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 // import { LegacyJSONLoader } from 'three/examples/jsm/loaders/deprecated/LegacyJSONLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import * as CANNON from 'cannon';
-import CORGI from "./corgi/dog_corgi_animated/scene.gltf"; 
-import tex1 from "./corgi/dog_corgi_animated/textures/dog_diffuse_diffuse.png";
-import sbin from "./corgi/dog_corgi_animated/scene.bin";
+import CORGI from "./corgi/scene.gltf"; 
+import tex1 from "./corgi/textures/dog_diffuse_diffuse.png";
+import sbin from "./corgi/scene.bin";
+
 import bg from './bg.png';
 
 const scene = new Scene();
@@ -26,7 +27,9 @@ const seedScene = new SeedScene();
 
 var controls = new OrbitControls( camera, renderer.domElement );
 
-console.log(CORGI.images);
+var mixer;
+var clock = new THREE.Clock();
+
 var loader = new GLTFLoader();
 loader.load(CORGI, (gltf) => {
   // console.log(gltf.scene.scale);
@@ -35,6 +38,12 @@ loader.load(CORGI, (gltf) => {
   gltf.scene.position.copy(new CANNON.Vec3(20, -15, 20));
   seedScene.add(gltf.scene);
   seedScene.land = gltf.scene;
+
+  mixer = new THREE.AnimationMixer(gltf.scene);
+
+  var clip = THREE.AnimationClip.findByName(gltf.animations, "Run");
+  var action = mixer.clipAction(clip);
+  action.play();
 })
 
 
@@ -60,6 +69,12 @@ renderer.setClearColor(0x7ec0ee, 1);
 const onAnimationFrameHandler = (timeStamp) => {
   renderer.render(scene, camera);
   seedScene.update && seedScene.update(timeStamp);
+
+  if (mixer) {
+    var delta = clock.getDelta();
+    mixer.update(delta);
+  }
+
   window.requestAnimationFrame(onAnimationFrameHandler);
 }
 window.requestAnimationFrame(onAnimationFrameHandler);
